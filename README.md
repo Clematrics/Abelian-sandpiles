@@ -1,0 +1,2 @@
+# Sandpiles
+Abelian sandpiles simulator
