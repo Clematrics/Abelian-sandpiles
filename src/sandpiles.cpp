@@ -21,6 +21,14 @@ void sandpile::reset() {
 	g = std::vector<std::vector<uint64_t>>(g_width, std::vector<uint64_t>(g_height, 0));
 }
 
+// void sandpile::changeSize(uint32_t width, uint32_t height) {
+// 	g_width = width;
+// 	g_height = height;
+// 	m.lock();
+// 	g = std::vector<std::vector<uint64_t>>(g_width, std::vector<uint64_t>(g_height, 0));
+// 	m.unlock();
+// }
+
 void sandpile::setExpansionRule(grid r) {
 	rule = r;
 	rule_width = r.size();
@@ -32,8 +40,10 @@ void sandpile::setExpansionRule(grid r) {
 
 void sandpile::addSand(uint32_t x, uint32_t y , uint64_t quantity) {
 	g[x][y] += quantity;
-	to_update.push( {x, y} );
-	to_update_table[x][y] = true;
+	if (!to_update_table[x][y]) {
+		to_update.push( {x, y} );
+		to_update_table[x][y] = true;
+	}
 }
 
 uint64_t sandpile::cellsToUpdate() {

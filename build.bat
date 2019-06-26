@@ -21,7 +21,7 @@ set libraries= %lib_opengl% %lib_sfml%
 rem defines
 set %defines%= /DENABLE_LOG
 
-set compilerflags=/O2 /Zi /EHsc /std:c++latest %defines%
+set compilerflags=/Ox /Zi /EHsc /std:c++latest %defines%
 set sources= src/*.cpp %imgui_sources%
 set linkerflags=/OUT:bin\main.exe
 cl.exe %compilerflags% %sources% %includes% /link %linkerflags% %libraries%

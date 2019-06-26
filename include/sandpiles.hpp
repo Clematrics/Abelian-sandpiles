@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+// #include <mutex>
 #include <queue>
 #include <vector>
 
@@ -11,6 +12,8 @@ class sandpile {
 public:
 	sandpile(uint32_t width, uint32_t height);
 	void reset();
+	// void wait();
+	// void changeSize(uint32_t width, uint32_t height);
 	void addSand(uint32_t x, uint32_t y, uint64_t quantity);
 	void setExpansionRule(grid r);
 	uint64_t update(uint64_t number);
@@ -24,6 +27,7 @@ private:
 	grid g;
 	uint32_t g_width;
 	uint32_t g_height;
+	// std::mutex m;
 
 	grid rule;
 	uint64_t rule_cnt;

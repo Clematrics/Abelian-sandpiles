@@ -17,30 +17,45 @@ uint32_t height = 361;
 
 bool worker_running = true;
 bool continue_sim = true;
+bool continue_work = true;
 
 sandpile sp(width, height);
 
 void sandpile_loop() {
 update:
 	worker_running = true;
+	continue_work = true;
 	uint64_t nb_to_update = 1;
-	while (nb_to_update > 0 && continue_sim) {
-		auto start = std::chrono::high_resolution_clock::now();
+	while (nb_to_update > 0 && continue_sim && continue_work) {
+		// auto start = std::chrono::high_resolution_clock::now();
 		nb_to_update = sp.update(1000000);
-		auto end = std::chrono::high_resolution_clock::now();
-		auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-		logDebug(std::to_string(diff.count()) + "ms");
+		// auto end = std::chrono::high_resolution_clock::now();
+		// auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+		// logDebug(std::to_string(diff.count()) + "ms");
 	}
 
 	worker_running = false;
+	continue_work = false;
 	while (continue_sim) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
-		if (nb_to_update = sp.cellsToUpdate())
+		if (nb_to_update = sp.cellsToUpdate() && continue_work)
 			goto update;
 	}
 }
 
 void showSandpileControl() {
+
+	// if (ImGui::CollapsingHeader("Grid")) {
+	// 	static int new_width = width, new_height = height;
+	// 	ImGui::InputInt("width", &new_width);	width = width < 0 ? 0 : width;
+	// 	ImGui::InputInt("height", &new_height);	height = height < 0 ? 0 : height;
+
+	// 	if (!worker_running && ImGui::Button("Change size")) {
+	// 		width = new_width;
+	// 		height = new_height;
+	// 		sp.changeSize(width, height);
+	// 	}
+	// }
 
 	if (ImGui::CollapsingHeader("Sand")) {
 		static int x = width / 2, y = height / 2, quantity = 1;
@@ -60,7 +75,7 @@ void showSandpileControl() {
 				}
 			}
 		}
-		if (ImGui::Button("Reset grid")) {
+		if (!worker_running && ImGui::Button("Reset grid")) {
 			sp.reset();
 		}
 
@@ -111,6 +126,11 @@ void showSandpileControl() {
 
 		std::string nb_cells = std::to_string(sp.cellsToUpdate()) + " cells still waiting for update";
 		ImGui::Text(nb_cells.c_str());
+
+		if (worker_running && ImGui::Button("Interrupt"))
+			continue_work = false;
+		else if (!worker_running && sp.cellsToUpdate() && ImGui::Button("Continue"))
+			continue_work = true;
 	}
 
 }
@@ -126,11 +146,16 @@ int main() {
 	sf::Texture texture;
 	texture.create(width, height);
 
+	static int count = 0;
+
 	try {
 		sf::Clock delta;
 		while (running) {
 			sf::Event event;
 			while (window.pollEvent(event)) {
+				if (event.type == event.Resized) {
+					window.setView(sf::View(sf::FloatRect(0, 0, window.getSize().x, window.getSize().y)));
+				}
 				ImGui::SFML::ProcessEvent(event);
 				running = event.type != event.Closed;
 			}
@@ -141,8 +166,9 @@ int main() {
 			texture.update(pixels.data());
 
 			sf::Sprite sprite(texture);
-			auto [w_w, w_h] = window.getView().getSize();
-			sprite.setScale(w_w / width, w_h / height);
+			auto [w_w, w_h] = sf::Vector2f(window.getSize());
+			auto w = w_w < w_h ? w_w : w_h;
+			sprite.setScale(w / float(width), w / float(height));
 			window.draw(sprite);
 
 			ImGui::SFML::Update(window, delta.restart());
